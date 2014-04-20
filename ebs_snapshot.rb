@@ -57,7 +57,7 @@ class EbsSnapshots
     date = Time.now.strftime("%Y-%m-%d")
 
     # skip volume with no attachment. Each attached volume will have a server_id
-    next if vid.server_id.nil?
+    next if connection.volumes.get(vid).server_id.nil?
 
     # Create a new snapshot transaction. It needs a description and 
     # a volume id to snapshot
@@ -82,7 +82,7 @@ class EbsSnapshots
     end
   end
 
-  def self.delete_snapshot(connection,dry)
+  def self.delete_snapshot(connection)
 
     # Grab the current timestamp for the age calculation
     time = Time.now
@@ -121,7 +121,6 @@ class EbsSnapshots
 
     # Make a connection to AWS
     connection = connection(provider,region,key_id,secret)
-
     puts "\nCreating snapshots #{time.to_s}"
     puts "Snapshot created Successfully" if snapshot(connection,opts[:volumes])
     puts "Deleted old snapshots" if delete_snapshot(connection)
