@@ -5,9 +5,21 @@ EBS-Snapshot and Rotation
   1. Taking EBS timely snapshots
   2. Deleting them based on the age
   3. Tag them appropriately
+  4. Do a dry run
 
 ## SYNOPSIS
-ebs_snapshot.rb -c config.yaml
+ebs_snapshot.rb -c config.yaml --dry
+
+```
+λ: ruby ebs_snapshot.rb --help
+Usage: ebs_snapshot.rb [options]
+
+    -c, --config CONFIG              read the options from file
+        --dry                        do a dry run and dont do anything
+    -h, --help                       show this message
+λ:
+
+```
 
 
 ## Example config
@@ -48,6 +60,21 @@ Checking snapshot es02p:daily:2014-04-19:12:41
 Checking snapshot es01p:hourly:2014-04-19:12:41
 deleteing snapshot snap-1c4878c0
 Deleted old snapshots
+
+```
+```
+λ: ruby ebs_snapshot.rb  -c config.yaml  --dry
+
+Below are the volumes id for snapshots
+	vol-ebb71aa7,vol-826fccce
+
+	Checking snapshot es01p:hourly:2014-04-20:23:27
+
+	Checking snapshot es02p:daily:2014-04-20:23:27
+
+	Checking snapshot es02p:daily:2014-04-19:12:41
+
+Nothing to delete
 
 ```
 
