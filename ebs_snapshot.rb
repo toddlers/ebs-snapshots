@@ -2,6 +2,7 @@
 
 require 'rubygems'
 require 'fog'
+require 'pp'
 require 'yaml'
 
 class EbsSnapshots
@@ -18,6 +19,9 @@ class EbsSnapshots
         options[:secret] = fp["aws_secret_key"]
         options[:region] = fp["aws_region"]
         options[:volumes] = fp["volumes"]
+      end
+      opts.on("--dry","do a dry run and dont do anything") do
+        options[:dry] = true
       end
       opts.on_tail("-h","--help","show this message") do 
         puts opts
@@ -49,50 +53,56 @@ class EbsSnapshots
       })
   end
 
-  def self.snapshot(connection,volumes)
-    volumes.each do |vid,prop|
+  def self.snapshot(connection,volumes,dry)
+    if dry
+      puts "\nBelow are the volumes id for snapshots"
+      puts "\t" + volumes.keys.join(",")
+    else
+      volumes.each do |vid,prop|
 
-    # Set up a time stamp for naming the snapshots
-    time_stamp = Time.now.strftime("%Y-%m-%d:%H:%M")
-    date = Time.now.strftime("%Y-%m-%d")
+      # Set up a time stamp for naming the snapshots
+      time_stamp = Time.now.strftime("%Y-%m-%d:%H:%M")
+      date = Time.now.strftime("%Y-%m-%d")
 
-    # skip volume with no attachment. Each attached volume will have a server_id
-    next if connection.volumes.get(vid).server_id.nil?
+      # skip volume with no attachment. Each attached volume will have a server_id
+      next if connection.volumes.get(vid).server_id.nil?
 
-    # Create a new snapshot transaction. It needs a description and 
-    # a volume id to snapshot
+      # Create a new snapshot transaction. It needs a description and 
+      # a volume id to snapshot
 
-    snapshot = connection.snapshots.new
-    snapshot.description = "#{prop[:host]}:#{prop[:type]}:#{time_stamp}"
-    snapshot.volume_id = vid
+      snapshot = connection.snapshots.new
+      snapshot.description = "#{prop[:host]}:#{prop[:type]}:#{time_stamp}"
+      snapshot.volume_id = vid
 
-    # Now actually take the snapshot
-    snapshot.save
+      # Now actually take the snapshot
+      snapshot.save
 
-    # To tag the snapshot we need the  snapshot id
-    #  So reload the snapshot ifno to get it
-    snapshot.reload
+      # To tag the snapshot we need the  snapshot id
+      #  So reload the snapshot ifno to get it
+      snapshot.reload
 
-    # To tag something you need a key, value and resource id of what you want to tag
-    connection.tags.create(:resource_id => snapshot.id, :key => "SnapshotLifetime", :value => prop[:lifetime])
-    connection.tags.create(:resource_id => snapshot.id, :key => "Snapshothost", :value => prop[:host])
-    connection.tags.create(:resource_id => snapshot.id, :key => "SnapshotType", :value => prop[:type])
-    connection.tags.create(:resource_id => snapshot.id, :key => "SnapshotPersistence", :value => 'delete')
-    connection.tags.create(:resource_id => snapshot.id, :key => "Name", :value => "#{prop[:host]}:#{prop[:type]}:#{date}")
+      # To tag something you need a key, value and resource id of what you want to tag
+      connection.tags.create(:resource_id => snapshot.id, :key => "SnapshotLifetime", :value => prop[:lifetime])
+      connection.tags.create(:resource_id => snapshot.id, :key => "Snapshothost", :value => prop[:host])
+      connection.tags.create(:resource_id => snapshot.id, :key => "SnapshotType", :value => prop[:type])
+      connection.tags.create(:resource_id => snapshot.id, :key => "SnapshotPersistence", :value => 'delete')
+      connection.tags.create(:resource_id => snapshot.id, :key => "Name", :value => "#{prop[:host]}:#{prop[:type]}:#{date}")
+      end
     end
   end
 
-  def self.delete_snapshot(connection)
+  def self.delete_snapshot(connection,dry)
 
     # Grab the current timestamp for the age calculation
     time = Time.now
 
     # Filtering out the snapshots
     persistence_tags = connection.tags.all(:key => 'SnapshotPersistence', :value => 'delete')
+    snapshots_to_delete = []
     persistence_tags.each do |tag|
       snapshot = connection.snapshots.get(tag.resource_id)
       snapshot_tags = snapshot.tags
-      puts "Checking snapshot #{snapshot.description}"
+      puts "\n\tChecking snapshot #{snapshot.description}"
       lifetime = snapshot_tags['SnapshotLifetime'].to_i
       type = snapshot_tags['SnapshotType']
 
@@ -105,8 +115,23 @@ class EbsSnapshots
 
     # Delete the snapshot if its too old. Deleting a snapshot requires the snapshot id
       if age.to_i > lifetime.to_i
-        puts "deleteing snapshot " + snapshot.id.to_s
-        connection.delete_snapshot(snapshot.id)
+        snapshots_to_delete << snapshot.id
+      end
+    end
+    if not dry
+      if not snapshots_to_delete.empty?
+        puts "\ndeleting snapshots " + snapshots_to_delete.join(",")
+        snapshots_to_delete.each do |s|
+          connection.delete_snapshot(s)
+        end
+      else
+        puts "\nNothing to delete"
+      end
+    else
+      if not snapshots_to_delete.empty?
+        puts "\nSnapshots for deletion " + snapshots_to_delete.join(",")
+      else
+        puts "\nNothing to delete"
       end
     end
   end
@@ -121,9 +146,8 @@ class EbsSnapshots
 
     # Make a connection to AWS
     connection = connection(provider,region,key_id,secret)
-    puts "\nCreating snapshots #{time.to_s}"
-    puts "Snapshot created Successfully" if snapshot(connection,opts[:volumes])
-    puts "Deleted old snapshots" if delete_snapshot(connection)
+    puts "Snapshot created Successfully" if snapshot(connection,opts[:volumes],opts[:dry])
+    puts "Deleted old snapshots" if delete_snapshot(connection,opts[:dry])
   end
 end
 EbsSnapshots.run(ARGV)
