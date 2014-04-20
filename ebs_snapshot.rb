@@ -19,9 +19,6 @@ class EbsSnapshots
         options[:region] = fp["aws_region"]
         options[:volumes] = fp["volumes"]
       end
-      opts.on("--dry","do a dry run and dont do anything") do
-        options[:dry] = true
-      end
       opts.on_tail("-h","--help","show this message") do 
         puts opts
         exit
@@ -85,7 +82,7 @@ class EbsSnapshots
     end
   end
 
-  def self.delete_snapshot(connection)
+  def self.delete_snapshot(connection,dry)
 
     # Grab the current timestamp for the age calculation
     time = Time.now
@@ -124,6 +121,7 @@ class EbsSnapshots
 
     # Make a connection to AWS
     connection = connection(provider,region,key_id,secret)
+
     puts "\nCreating snapshots #{time.to_s}"
     puts "Snapshot created Successfully" if snapshot(connection,opts[:volumes])
     puts "Deleted old snapshots" if delete_snapshot(connection)
