@@ -2,8 +2,8 @@
 
 require 'rubygems'
 require 'fog'
-require 'pp'
 require 'yaml'
+require 'optparse'
 
 class EbsSnapshots
 
