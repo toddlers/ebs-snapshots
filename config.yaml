@@ -6,7 +6,7 @@ aws_region: '<AWS_REGION>'
 
 # specify the volumes
 volumes:
-  vol-ebb71aa7:
+  <volume_id>:
     :lifetime: "<retention_time>"
     :host: "<hostname>"
     :type: "<frequency for taking snapshots>"
