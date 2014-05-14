@@ -1,17 +1,17 @@
-# AWS credentials
 provider: 'aws'
-aws_access_key_id: '<AWS_ACCESS_KEY_ID>'
-aws_secret_key: '<AWS_SECRET_KEY>'
-aws_region: '<AWS_REGION>'
-
-# specify the volumes
+aws_access_key_id: 'AKIAIXBGSOFRUNRSLULA'
+aws_secret_key: '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'
+aws_region: 'us-east-1'
 volumes:
-  <volume_id>:
-    :lifetime: "<retention_time>"
-    :host: "<hostname>"
-    :type: "<frequency for taking snapshots>"
-# Example
-  vol-ebb71aa7:
-    :lifetime: 1
-    :host: "blah.foo.com"
-    :type: "hourly" # you can specify daily as well 
+  vol-cbc14d87:
+    :lifetime: '5d'
+    :host: 'es01s.insideview.com'
+    :type: 'daily'
+  vol-b174b0f8:
+    :lifetime: '5d'
+    :host: 'es02s.insideview.com'
+    :type: 'daily'
+  vol-0813064a:
+    :lifetime: '5d'
+    :host: 'es02s.insideview.com'
+    :type: 'daily'

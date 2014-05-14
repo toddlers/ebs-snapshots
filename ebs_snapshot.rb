@@ -1,6 +1,7 @@
 #!/usr/bin/env ruby
 
-require 'rubygems'
+# gem install fog  --no-ri --no-rdoc
+require 'rubygems' if RUBY_VERSION < "1.9"
 require 'fog'
 require 'yaml'
 require 'optparse'
@@ -23,7 +24,7 @@ class EbsSnapshots
       opts.on("--dry","do a dry run and dont do anything") do
         options[:dry] = true
       end
-      opts.on_tail("-h","--help","show this message") do 
+      opts.on_tail("-h","--help","show this message") do
         puts opts
         exit
       end
@@ -67,7 +68,7 @@ class EbsSnapshots
       # skip volume with no attachment. Each attached volume will have a server_id
       next if connection.volumes.get(vid).server_id.nil?
 
-      # Create a new snapshot transaction. It needs a description and 
+      # Create a new snapshot transaction. It needs a description and
       # a volume id to snapshot
 
       snapshot = connection.snapshots.new
