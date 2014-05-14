@@ -1,0 +1,17 @@
+provider: 'aws'
+aws_access_key_id: '<AWS_ACCESS_KEY_ID>'
+aws_secret_key: '<AWS_SECRET_KEY>'
+aws_region: 'us-east-1'
+volumes:
+  vol-cbc14d87:
+    :lifetime: '5d'
+    :host: 'web.foo..com'
+    :type: 'daily'
+  vol-b174b0f8:
+    :lifetime: '5d'
+    :host: 'web.foo.com'
+    :type: 'daily'
+  vol-0813064a:
+    :lifetime: '5d'
+    :host: 'web.foo.com'
+    :type: 'daily'
