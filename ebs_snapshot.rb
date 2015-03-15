@@ -134,7 +134,7 @@ class EbsSnapshots
       # delete call return something like this error
       # The snapshot snap-1e8ee39e is currently in use by ami-84dasdas
 
-      next if "#{snapshot.description}"[ami]
+      next if "#{snapshot.description}"[/ami/]
 
       lifetime = snapshot_tags['SnapshotLifetime'].to_i
       type = snapshot_tags['SnapshotType']
