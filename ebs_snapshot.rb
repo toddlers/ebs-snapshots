@@ -99,11 +99,43 @@ class EbsSnapshots
 
     # Filtering out the snapshots
     persistence_tags = connection.tags.all(:key => 'SnapshotPersistence', :value => 'delete')
+
+    #connection.tags.all would give something lik this
+
+    #<Fog::Compute::AWS::Tag
+    #key="SnapshotPersistence",
+    #value="delete",
+    #resource_id="snap-1f5cdc9d",
+    #resource_type="snapshot"
+    #>
+
     snapshots_to_delete = []
     persistence_tags.each do |tag|
+
+      #[13] pry(main)> conn.snapshots.get('snap-c8b0754a')
+      #<Fog::Compute::AWS::Snapshot
+      #id="snap-c8b0754a",
+      #description="ec2-12-34-56-78.compute-1.amazonaws.com:daily:2015-03-12:00:00",
+      #progress="100%",
+      #created_at=2015-03-12 06:59:06 UTC,
+      #owner_id="12324556",
+      #state="completed",
+      #tags={"Snapshothost"=>"ec2-12-34-56-78.compute-1.amazonaws.com", "ClusterType"=>"foo",
+      #"SnapshotLifetime"=>"5d", "SnapshotType"=>"daily", "SnapshotPersistence"=>"delete",
+      #"Name"=>"ec2-54-234-91-134.compute-1.amazonaws.com:daily:2015-03-12"},
+      #volume_id="vol-838aa79a",
+      #volume_size=200
+
       snapshot = connection.snapshots.get(tag.resource_id)
       snapshot_tags = snapshot.tags
       puts "\n\tChecking snapshot #{snapshot.description}"
+
+      # checking for ami attached snapshots
+      # delete call return something like this error
+      # The snapshot snap-1e8ee39e is currently in use by ami-84dasdas
+
+      next if "#{snapshot.description}"[ami]
+
       lifetime = snapshot_tags['SnapshotLifetime'].to_i
       type = snapshot_tags['SnapshotType']
 
